@@ -1,5 +1,6 @@
 import pandas as pd
 from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 # Učitavanje trening, validacionog i test skupa
@@ -103,3 +104,24 @@ test_clean.to_csv(
     header=False,
     index=False
 )
+
+
+# Broj primera za svaku emociju
+emotion_counts = train_clean["emotion"].value_counts()
+
+print("\nBroj primera po emocijama nakon čišćenja:")
+print(emotion_counts)
+
+
+# Crtanje grafikona
+emotion_counts.plot(kind="bar")
+
+plt.title("Raspodela emocija u trening skupu")
+plt.xlabel("Emocija")
+plt.ylabel("Broj primera")
+plt.xticks(rotation=0)
+plt.tight_layout()
+
+plt.savefig("raspodela_emocija.png")
+
+plt.show()
