@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
 
 
@@ -22,8 +22,8 @@ x_train_tfidf = tfidf.fit_transform(x_train)
 x_val_tfidf = tfidf.transform(x_val)
 
 
-# Treniranje Multinomial Naive Bayes modela
-model = MultinomialNB(alpha=1.0)
+# Treniranje Random Forest modela
+model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
 model.fit(x_train_tfidf, y_train)
 
 predictions = model.predict(x_val_tfidf)
@@ -37,8 +37,8 @@ print("\n", classification_report(y_val, predictions, zero_division=0))
 
 # Matrica konfuzije
 ConfusionMatrixDisplay.from_predictions(y_val, predictions)
-plt.title("Matrica konfuzije - Naive Bayes")
+plt.title("Matrica konfuzije - Random Forest")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_naive_bayes.png")
+plt.savefig("results/confusion_matrix_random_forest.png")
 plt.close()

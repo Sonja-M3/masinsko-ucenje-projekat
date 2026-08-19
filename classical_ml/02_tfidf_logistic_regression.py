@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
 
 
@@ -16,14 +16,18 @@ x_val = val["text"]
 y_val = val["emotion"]
 
 
-# TF-IDF reprezentacija teksta
+# Pretvaranje tekstova u TF-IDF vektore
+# TF-IDF ucimo samo na trening skupu
 tfidf = TfidfVectorizer()
 x_train_tfidf = tfidf.fit_transform(x_train)
 x_val_tfidf = tfidf.transform(x_val)
 
+print("Train:", x_train_tfidf.shape)
+print("Validation:", x_val_tfidf.shape)
 
-# Treniranje linearnog SVM modela
-model = LinearSVC(C=1.0, max_iter=2000)
+
+# Treniranje logisticke regresije
+model = LogisticRegression(max_iter=1000)
 model.fit(x_train_tfidf, y_train)
 
 predictions = model.predict(x_val_tfidf)
@@ -37,8 +41,8 @@ print("\n", classification_report(y_val, predictions, zero_division=0))
 
 # Matrica konfuzije
 ConfusionMatrixDisplay.from_predictions(y_val, predictions)
-plt.title("Matrica konfuzije - linearni SVM")
+plt.title("Matrica konfuzije - logisticka regresija")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_svm.png")
+plt.savefig("results/confusion_matrix_logistic_regression.png")
 plt.close()

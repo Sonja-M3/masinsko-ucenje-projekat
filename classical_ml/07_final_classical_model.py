@@ -55,7 +55,7 @@ ConfusionMatrixDisplay.from_predictions(y_test, predictions)
 plt.title("Matrica konfuzije - konacni SVM")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_final_svm.png")
+plt.savefig("results/confusion_matrix_final_svm.png")
 plt.close()
 
 
@@ -65,6 +65,6 @@ errors = test.copy()
 errors["prediction"] = predictions
 errors = errors[errors["emotion"] != errors["prediction"]]
 
-errors.to_csv("misclassified_examples.csv", index=False)
+errors.to_csv("results/misclassified_examples.csv", index=False)
 
 print("\nBroj pogresno klasifikovanih primera:", len(errors))

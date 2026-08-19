@@ -83,7 +83,7 @@ ConfusionMatrixDisplay.from_predictions(y_val, svm_predictions)
 plt.title("Matrica konfuzije - podeseni SVM")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_svm_tuned.png")
+plt.savefig("results/confusion_matrix_svm_tuned.png")
 plt.close()
 
 
@@ -140,7 +140,7 @@ ConfusionMatrixDisplay.from_predictions(y_val, logistic_predictions)
 plt.title("Matrica konfuzije - podesena logisticka regresija")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_logistic_regression_tuned.png")
+plt.savefig("results/confusion_matrix_logistic_regression_tuned.png")
 plt.close()
 
 
@@ -151,7 +151,7 @@ results = pd.DataFrame({
     "macro_f1": [svm_macro_f1, logistic_macro_f1]
 })
 
-results.to_csv("tuned_results.csv", index=False)
+results.to_csv("results/tuned_results.csv", index=False)
 
 print("\nRezultati podesenih modela:")
 print(results)
