@@ -1,0 +1,3 @@
+model,accuracy,macro_f1
+Linear SVM tuned,0.9018527791687532,0.8794624041622939
+Logistic Regression tuned,0.8948422633950927,0.8709697823408251
