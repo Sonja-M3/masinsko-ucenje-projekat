@@ -56,22 +56,16 @@ test_clean = test_data.drop_duplicates()
 # Uklanjanje tekstova koji se pojavljuju i u validacionom i test skupu
 test_texts = set(test_clean["text"])
 
-val_clean = val_clean[
-    ~val_clean["text"].isin(test_texts)
-]
+val_clean = val_clean[~val_clean["text"].isin(test_texts)]
 
 
 # Uklanjanje tekstova iz trening skupa koji postoje u validacionom ili test skupu
 val_texts = set(val_clean["text"])
 test_texts = set(test_clean["text"])
 
-train_clean = train_clean[
-    ~train_clean["text"].isin(val_texts)
-]
+train_clean = train_clean[~train_clean["text"].isin(val_texts)]
 
-train_clean = train_clean[
-    ~train_clean["text"].isin(test_texts)
-]
+train_clean = train_clean[~train_clean["text"].isin(test_texts)]
 
 
 # Ponovno numerisanje indeksa nakon uklanjanja redova

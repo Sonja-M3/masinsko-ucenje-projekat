@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
 
 
@@ -16,18 +16,14 @@ x_val = val["text"]
 y_val = val["emotion"]
 
 
-# Pretvaranje tekstova u TF-IDF vektore
-# TF-IDF ucimo samo na trening skupu
+# TF-IDF reprezentacija teksta
 tfidf = TfidfVectorizer()
 x_train_tfidf = tfidf.fit_transform(x_train)
 x_val_tfidf = tfidf.transform(x_val)
 
-print("Train:", x_train_tfidf.shape)
-print("Validation:", x_val_tfidf.shape)
 
-
-# Treniranje logisticke regresije
-model = LogisticRegression(max_iter=1000)
+# Treniranje Multinomial Naive Bayes modela
+model = MultinomialNB(alpha=1.0)
 model.fit(x_train_tfidf, y_train)
 
 predictions = model.predict(x_val_tfidf)
@@ -41,8 +37,8 @@ print("\n", classification_report(y_val, predictions, zero_division=0))
 
 # Matrica konfuzije
 ConfusionMatrixDisplay.from_predictions(y_val, predictions)
-plt.title("Matrica konfuzije - logisticka regresija")
+plt.title("Matrica konfuzije - Naive Bayes")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("confusion_matrix_logistic_regression.png")
+plt.savefig("confusion_matrix_naive_bayes.png")
 plt.close()
