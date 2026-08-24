@@ -1,6 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import os
+import joblib
+
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
@@ -35,6 +38,10 @@ model = Pipeline([
 # Finalno treniranje na train + validation skupu
 model.fit(x_train_val, y_train_val)
 
+# Cuvanje finalnog modela
+os.makedirs("models", exist_ok=True)
+joblib.dump(model, "models/final_svm.joblib")
+
 
 # Test skup se koristi samo jednom za konacnu evaluaciju
 predictions = model.predict(x_test)
@@ -55,16 +62,7 @@ ConfusionMatrixDisplay.from_predictions(y_test, predictions)
 plt.title("Matrica konfuzije - konacni SVM")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_final_svm.png")
+plt.savefig("results/SVM/confusion_matrix_final_svm.png")
 plt.close()
 
 
-# Cuvanje pogresno klasifikovanih primera
-# za kasniju analizu gresaka
-errors = test.copy()
-errors["prediction"] = predictions
-errors = errors[errors["emotion"] != errors["prediction"]]
-
-errors.to_csv("results/misclassified_examples.csv", index=False)
-
-print("\nBroj pogresno klasifikovanih primera:", len(errors))
