@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
@@ -67,6 +69,12 @@ print("CV Macro F1:", svm_grid.best_score_)
 # Najbolja kombinacija parametara se zatim
 # proverava na posebnom validation skupu
 best_svm = svm_grid.best_estimator_
+
+joblib.dump(
+    best_svm,
+    "models/classical_ml/svm_tuned.joblib"
+)
+
 svm_predictions = best_svm.predict(x_val)
 
 svm_accuracy = accuracy_score(y_val, svm_predictions)
@@ -83,7 +91,7 @@ ConfusionMatrixDisplay.from_predictions(y_val, svm_predictions)
 plt.title("Matrica konfuzije - podeseni SVM")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_svm_tuned.png")
+plt.savefig("results/SVM/confusion_matrix_svm_tuned.png")
 plt.close()
 
 
@@ -124,6 +132,12 @@ print("CV Macro F1:", logistic_grid.best_score_)
 
 # Provera najbolje logisticke regresije na validation skupu
 best_logistic = logistic_grid.best_estimator_
+
+joblib.dump(
+    best_logistic,
+    "models/classical_ml/logistic_regression_tuned.joblib"
+)
+
 logistic_predictions = best_logistic.predict(x_val)
 
 logistic_accuracy = accuracy_score(y_val, logistic_predictions)
@@ -140,7 +154,7 @@ ConfusionMatrixDisplay.from_predictions(y_val, logistic_predictions)
 plt.title("Matrica konfuzije - podesena logisticka regresija")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_logistic_regression_tuned.png")
+plt.savefig("results/logistic_regression/confusion_matrix_logistic_regression_tuned.png")
 plt.close()
 
 

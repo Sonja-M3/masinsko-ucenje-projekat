@@ -40,7 +40,10 @@ model.fit(x_train_val, y_train_val)
 
 # Cuvanje finalnog modela
 os.makedirs("models", exist_ok=True)
-joblib.dump(model, "models/final_svm.joblib")
+joblib.dump(
+    model,
+    "models/classical_ml/final_svm.joblib"
+)
 
 
 # Test skup se koristi samo jednom za konacnu evaluaciju

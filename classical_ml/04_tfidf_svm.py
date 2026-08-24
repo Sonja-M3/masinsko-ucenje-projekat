@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -26,6 +28,12 @@ x_val_tfidf = tfidf.transform(x_val)
 model = LinearSVC(C=1.0, max_iter=2000)
 model.fit(x_train_tfidf, y_train)
 
+# Cuvanje modela i TF-IDF vektorizatora
+joblib.dump(
+    {"tfidf": tfidf, "model": model},
+    "models/classical_ml/svm.joblib"
+)
+
 predictions = model.predict(x_val_tfidf)
 
 
@@ -40,5 +48,5 @@ ConfusionMatrixDisplay.from_predictions(y_val, predictions)
 plt.title("Matrica konfuzije - linearni SVM")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_svm.png")
+plt.savefig("results/SVM/confusion_matrix_svm.png")
 plt.close()

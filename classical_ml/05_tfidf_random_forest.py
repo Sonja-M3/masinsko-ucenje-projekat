@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -26,6 +28,12 @@ x_val_tfidf = tfidf.transform(x_val)
 model = RandomForestClassifier(n_estimators=100, random_state=42, n_jobs=-1)
 model.fit(x_train_tfidf, y_train)
 
+# Cuvanje modela i TF-IDF vektorizatora
+joblib.dump(
+    {"tfidf": tfidf, "model": model},
+    "models/classical_ml/random_forest.joblib"
+)
+
 predictions = model.predict(x_val_tfidf)
 
 
@@ -40,5 +48,5 @@ ConfusionMatrixDisplay.from_predictions(y_val, predictions)
 plt.title("Matrica konfuzije - Random Forest")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_random_forest.png")
+plt.savefig("results/random_forest/confusion_matrix_random_forest.png")
 plt.close()

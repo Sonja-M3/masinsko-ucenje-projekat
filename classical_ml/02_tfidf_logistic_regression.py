@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -30,6 +32,12 @@ print("Validation:", x_val_tfidf.shape)
 model = LogisticRegression(max_iter=1000)
 model.fit(x_train_tfidf, y_train)
 
+# Cuvanje modela i TF-IDF vektorizatora
+joblib.dump(
+    {"tfidf": tfidf, "model": model},
+    "models/classical_ml/logistic_regression.joblib"
+)
+
 predictions = model.predict(x_val_tfidf)
 
 
@@ -44,5 +52,5 @@ ConfusionMatrixDisplay.from_predictions(y_val, predictions)
 plt.title("Matrica konfuzije - logisticka regresija")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_logistic_regression.png")
+plt.savefig("results/logistic_regression/confusion_matrix_logistic_regression.png")
 plt.close()

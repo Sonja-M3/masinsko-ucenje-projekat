@@ -218,3 +218,4 @@ __marimo__/
 .streamlit/secrets.toml
 data/raw/
 results/best_bert_model.pt
+models/classical_ml/random_forest.joblib

@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import joblib
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, f1_score, classification_report, ConfusionMatrixDisplay
@@ -26,6 +28,12 @@ x_val_tfidf = tfidf.transform(x_val)
 model = MultinomialNB(alpha=1.0)
 model.fit(x_train_tfidf, y_train)
 
+# Cuvanje modela i TF-IDF vektorizatora
+joblib.dump(
+    {"tfidf": tfidf, "model": model},
+    "models/classical_ml/naive_bayes.joblib"
+)
+
 predictions = model.predict(x_val_tfidf)
 
 
@@ -40,5 +48,5 @@ ConfusionMatrixDisplay.from_predictions(y_val, predictions)
 plt.title("Matrica konfuzije - Naive Bayes")
 plt.xticks(rotation=45)
 plt.tight_layout()
-plt.savefig("results/confusion_matrix_naive_bayes.png")
+plt.savefig("results/naive_bayes/confusion_matrix_naive_bayes.png")
 plt.close()
