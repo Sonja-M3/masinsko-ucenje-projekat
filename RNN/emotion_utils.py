@@ -8,6 +8,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import Any, Mapping
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,6 +30,13 @@ MAX_VOCAB_SIZE = 20_000
 MAX_SEQUENCE_LENGTH = 80
 BATCH_SIZE = 128
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:'[a-z0-9]+)?")
+MODEL_CONFIG_KEYS = (
+    "embedding_dim",
+    "hidden_size",
+    "num_layers",
+    "dropout",
+    "learning_rate",
+)
 
 
 def set_seed(seed: int = SEED) -> None:
@@ -493,3 +501,56 @@ def print_evaluation(
     plt.show()
 
     return loss, accuracy, true_labels, predicted_labels
+
+
+def save_emotion_checkpoint(
+    model: nn.Module,
+    data: EmotionData,
+    result: Mapping[str, Any],
+    model_type: str,
+    output_path: str | Path | None = None,
+) -> Path:
+    """Sacuvaj tezine modela, konfiguraciju, recnik i mapiranje klasa.
+
+    Model mora vec biti istreniran. Funkcija kopira tenzore na CPU, pa se
+    dobijeni checkpoint kasnije moze ucitati i na racunaru bez CUDA podrske.
+    """
+    normalized_model_type = model_type.strip().upper()
+    if normalized_model_type not in {"GRU", "LSTM"}:
+        raise ValueError("model_type mora biti 'GRU' ili 'LSTM'.")
+
+    missing_keys = [key for key in MODEL_CONFIG_KEYS if key not in result]
+    if missing_keys:
+        raise KeyError(
+            "Nedostaju parametri konfiguracije: " + ", ".join(missing_keys)
+        )
+
+    if output_path is None:
+        models_dir = Path(__file__).resolve().parent.parent / "models" / "rnn"
+        output_path = models_dir / f"{normalized_model_type.lower()}_emotion.pth"
+    else:
+        output_path = Path(output_path)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    checkpoint = {
+        "checkpoint_version": 1,
+        "model_type": normalized_model_type,
+        "model_name": result.get("name", normalized_model_type),
+        "config": {key: result[key] for key in MODEL_CONFIG_KEYS},
+        "training_result": dict(result),
+        "state_dict": {
+            name: value.detach().cpu().clone()
+            for name, value in model.state_dict().items()
+        },
+        "index_to_token": list(data.index_to_token),
+        "token_to_index": dict(data.token_to_index),
+        "label_names": list(data.label_names),
+        "label_to_index": dict(data.label_to_index),
+        "max_sequence_length": data.max_sequence_length,
+        "padding_idx": PAD_IDX,
+        "seed": SEED,
+    }
+
+    torch.save(checkpoint, output_path)
+    return output_path
