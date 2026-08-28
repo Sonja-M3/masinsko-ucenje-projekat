@@ -3,3 +3,6 @@ matplotlib
 scikit-learn
 joblib
 jupyter
+numpy
+torch
+tqdm
