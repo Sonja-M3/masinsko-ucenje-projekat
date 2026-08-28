@@ -8,13 +8,14 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import Any, Mapping
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
 from sklearn.metrics import ConfusionMatrixDisplay, classification_report, confusion_matrix
-from torch.nn.utils.rnn import pad_sequence
+from torch.nn.utils.rnn import pack_padded_sequence, pad_sequence
 from torch.utils.data import DataLoader, Dataset
 from tqdm.auto import tqdm
 
@@ -29,6 +30,13 @@ MAX_VOCAB_SIZE = 20_000
 MAX_SEQUENCE_LENGTH = 80
 BATCH_SIZE = 128
 TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:'[a-z0-9]+)?")
+MODEL_CONFIG_KEYS = (
+    "embedding_dim",
+    "hidden_size",
+    "num_layers",
+    "dropout",
+    "learning_rate",
+)
 
 
 def set_seed(seed: int = SEED) -> None:
@@ -493,3 +501,183 @@ def print_evaluation(
     plt.show()
 
     return loss, accuracy, true_labels, predicted_labels
+
+
+class LSTMClassifier(nn.Module):
+    """LSTM arhitektura koja se koristi u sacuvanom modelu emocija."""
+
+    def __init__(
+        self,
+        vocab_size: int,
+        embedding_dim: int,
+        hidden_size: int,
+        num_classes: int,
+        padding_idx: int,
+        num_layers: int = 1,
+        dropout: float = 0.3,
+    ) -> None:
+        super().__init__()
+        self.embedding = nn.Embedding(
+            vocab_size, embedding_dim, padding_idx=padding_idx
+        )
+        self.lstm = nn.LSTM(
+            input_size=embedding_dim,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=dropout if num_layers > 1 else 0.0,
+        )
+        self.dropout = nn.Dropout(dropout)
+        self.classifier = nn.Linear(hidden_size, num_classes)
+
+    def forward(
+        self, token_ids: torch.Tensor, lengths: torch.Tensor
+    ) -> torch.Tensor:
+        embedded = self.embedding(token_ids)
+        packed = pack_padded_sequence(
+            embedded,
+            lengths.cpu(),
+            batch_first=True,
+            enforce_sorted=False,
+        )
+        _, (hidden, _) = self.lstm(packed)
+        return self.classifier(self.dropout(hidden[-1]))
+
+
+def load_lstm_checkpoint(
+    checkpoint_path: str | Path,
+    device: torch.device | None = None,
+) -> tuple[LSTMClassifier, dict[str, Any]]:
+    """Ucitava LSTM model zajedno sa recnikom i mapiranjem klasa."""
+    device = get_device() if device is None else device
+    checkpoint = torch.load(
+        Path(checkpoint_path), map_location=device, weights_only=True
+    )
+
+    if checkpoint.get("model_type") != "LSTM":
+        raise ValueError("Checkpoint ne sadrzi LSTM model.")
+
+    required_keys = {
+        "config",
+        "state_dict",
+        "index_to_token",
+        "token_to_index",
+        "label_names",
+        "max_sequence_length",
+        "padding_idx",
+    }
+    missing_keys = sorted(required_keys - checkpoint.keys())
+    if missing_keys:
+        raise KeyError(
+            "Checkpoint nema obavezna polja: " + ", ".join(missing_keys)
+        )
+
+    config = checkpoint["config"]
+    model = LSTMClassifier(
+        vocab_size=len(checkpoint["index_to_token"]),
+        embedding_dim=config["embedding_dim"],
+        hidden_size=config["hidden_size"],
+        num_classes=len(checkpoint["label_names"]),
+        padding_idx=checkpoint["padding_idx"],
+        num_layers=config["num_layers"],
+        dropout=config["dropout"],
+    ).to(device)
+    model.load_state_dict(checkpoint["state_dict"])
+    model.eval()
+    return model, checkpoint
+
+
+def predict_emotions(
+    model: nn.Module,
+    texts: list[str],
+    checkpoint: Mapping[str, Any],
+) -> list[tuple[str, float]]:
+    """Vraca predvidjenu emociju i verovatnocu za svaki prosledjeni tekst."""
+    if not texts:
+        return []
+
+    token_to_index = checkpoint["token_to_index"]
+    max_sequence_length = checkpoint["max_sequence_length"]
+    padding_idx = checkpoint["padding_idx"]
+    label_names = checkpoint["label_names"]
+
+    sequences = [
+        torch.tensor(
+            numericalize(text, token_to_index, max_sequence_length),
+            dtype=torch.long,
+        )
+        for text in texts
+    ]
+    lengths = torch.tensor(
+        [len(sequence) for sequence in sequences], dtype=torch.long
+    )
+    token_ids = pad_sequence(
+        sequences, batch_first=True, padding_value=padding_idx
+    )
+
+    device = next(model.parameters()).device
+    with torch.no_grad():
+        probabilities = torch.softmax(
+            model(token_ids.to(device), lengths), dim=1
+        )
+
+    confidences, predictions = probabilities.max(dim=1)
+    return [
+        (label_names[prediction], confidence)
+        for prediction, confidence in zip(
+            predictions.cpu().tolist(), confidences.cpu().tolist()
+        )
+    ]
+
+
+def save_emotion_checkpoint(
+    model: nn.Module,
+    data: EmotionData,
+    result: Mapping[str, Any],
+    model_type: str,
+    output_path: str | Path | None = None,
+) -> Path:
+    """Sacuvaj tezine modela, konfiguraciju, recnik i mapiranje klasa.
+
+    Model mora vec biti istreniran. Funkcija kopira tenzore na CPU, pa se
+    dobijeni checkpoint kasnije moze ucitati i na racunaru bez CUDA podrske.
+    """
+    normalized_model_type = model_type.strip().upper()
+    if normalized_model_type not in {"GRU", "LSTM"}:
+        raise ValueError("model_type mora biti 'GRU' ili 'LSTM'.")
+
+    missing_keys = [key for key in MODEL_CONFIG_KEYS if key not in result]
+    if missing_keys:
+        raise KeyError(
+            "Nedostaju parametri konfiguracije: " + ", ".join(missing_keys)
+        )
+
+    if output_path is None:
+        models_dir = Path(__file__).resolve().parent.parent / "models" / "rnn"
+        output_path = models_dir / f"{normalized_model_type.lower()}_emotion.pth"
+    else:
+        output_path = Path(output_path)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    checkpoint = {
+        "checkpoint_version": 1,
+        "model_type": normalized_model_type,
+        "model_name": result.get("name", normalized_model_type),
+        "config": {key: result[key] for key in MODEL_CONFIG_KEYS},
+        "training_result": dict(result),
+        "state_dict": {
+            name: value.detach().cpu().clone()
+            for name, value in model.state_dict().items()
+        },
+        "index_to_token": list(data.index_to_token),
+        "token_to_index": dict(data.token_to_index),
+        "label_names": list(data.label_names),
+        "label_to_index": dict(data.label_to_index),
+        "max_sequence_length": data.max_sequence_length,
+        "padding_idx": PAD_IDX,
+        "seed": SEED,
+    }
+
+    torch.save(checkpoint, output_path)
+    return output_path
