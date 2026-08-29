@@ -6,3 +6,4 @@ jupyter
 numpy
 torch
 tqdm
+transformers
