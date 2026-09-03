@@ -64,23 +64,45 @@ Pre modelovanja proverene su nedostajuće vrednosti, uklonjeni su duplikati i sp
 - Sonja Mijailović
 - Dimitrije Vranić
 
+## Redosled Jupyter svezaka
+
+Sveske su numerisane prema preporučenom redosledu pokretanja:
+
+1. [`01_klasicni_modeli.ipynb`](classical_ml/01_klasicni_modeli.ipynb) – klasični modeli mašinskog učenja
+2. [`02_lstm.ipynb`](RNN/02_lstm.ipynb) – LSTM model
+3. [`03_gru.ipynb`](RNN/03_gru.ipynb) – GRU model
+4. [`04_bert.ipynb`](tranformer_models/04_bert.ipynb) – BERT model
+5. [`05_distilbert.ipynb`](tranformer_models/05_distilbert.ipynb) – DistilBERT model
+6. [`06_final_demo.ipynb`](06_final_demo.ipynb) – završna demonstracija projekta
+
 ## Pokretanje projekta
 
-Za najjednostavnije pokretanje koristite završnu Jupyter svesku `final_demo.ipynb`. Ona učitava već obrađene podatke i sačuvane modele, prikazuje rezultate i demonstrira predikcije.
+Za najjednostavnije pokretanje koristite završnu Jupyter svesku `06_final_demo.ipynb`. Ona učitava već obrađene podatke i sačuvane modele, prikazuje rezultate i demonstrira predikcije.
 
-### 1. Kloniranje repozitorijuma
+### 1. Git LFS i kloniranje repozitorijuma
 
-Veliki modeli čuvaju se pomoću Git LFS-a, pa je potrebno da [Git LFS](https://git-lfs.com/) bude instaliran.
+Zbog veličine pojedinih istreniranih modela projekat koristi [Git LFS (Git Large File Storage)](https://git-lfs.com/). Nakon instalacije Git LFS-a pokrenite:
 
 ```bash
+git lfs install
 git clone https://github.com/Sonja-M3/masinsko-ucenje-projekat.git
 cd masinsko-ucenje-projekat
 git lfs pull
 ```
 
-### 2. Kreiranje virtuelnog okruženja
+Nakon toga svi dostupni sačuvani modeli nalaze se u direktorijumu `models/`.
 
-Potrebna je instalacija Python-a. Zatim kreirajte virtuelno okruženje:
+### 2. Podešavanje Python okruženja
+
+Preporučuje se korišćenje novije verzije Python-a. Klasični deo projekta i završna demo sveska testirani su sa Python-om 3.13.
+
+Provera instalirane verzije Python-a:
+
+```bash
+python --version
+```
+
+Kreiranje virtuelnog okruženja:
 
 ```bash
 python -m venv .venv
@@ -110,7 +132,7 @@ python -m pip install -r requirements.txt
 Komandu pokrenite iz osnovnog direktorijuma projekta:
 
 ```bash
-jupyter notebook final_demo.ipynb
+jupyter notebook 06_final_demo.ipynb
 ```
 
 Kada se sveska otvori u pregledaču, izaberite **Kernel > Restart & Run All** kako biste izvršili sve ćelije redom.
@@ -121,14 +143,27 @@ Pri prvom pokretanju BERT-a i DistilBERT-a potrebna je internet veza, jer biblio
 
 ```text
 masinsko-ucenje-projekat/
-├── classical_ml/       # Klasični TF-IDF modeli i podešavanje parametara
-├── data/processed/     # Obrađeni trening, validacioni i test podaci
-├── models/             # Sačuvani modeli
-├── results/            # Rezultati, izveštaji i matrice konfuzije
-├── RNN/                # LSTM i GRU modeli
-├── tranformer_models/  # BERT i DistilBERT modeli
-├── final_demo.ipynb    # Završna demonstracija projekta
-└── requirements.txt    # Potrebne Python biblioteke
+├── classical_ml/
+│   └── 01_klasicni_modeli.ipynb  # Klasični TF-IDF modeli
+├── RNN/
+│   ├── 02_lstm.ipynb              # LSTM model
+│   └── 03_gru.ipynb               # GRU model
+├── tranformer_models/
+│   ├── 04_bert.ipynb              # BERT model
+│   └── 05_distilbert.ipynb        # DistilBERT model
+├── data/processed/                # Obrađeni podaci
+├── models/                        # Sačuvani modeli
+├── results/                       # Rezultati, izveštaji i matrice konfuzije
+├── 06_final_demo.ipynb            # Završna demonstracija projekta
+└── requirements.txt               # Potrebne Python biblioteke
 ```
 
 Detalji treniranja i evaluacije pojedinačnih modela nalaze se u odgovarajućim Python skriptama i Jupyter sveskama.
+
+## Literatura
+
+- [Emotions Dataset for NLP](https://www.kaggle.com/datasets/praveengovi/emotions-dataset-for-nlp), Kaggle
+- [Scikit-learn dokumentacija](https://scikit-learn.org/stable/)
+- [PyTorch dokumentacija](https://docs.pytorch.org/docs/stable/index.html)
+- [Transformers dokumentacija](https://huggingface.co/docs/transformers/)
+- [Materijali i literatura sa kursa Mašinsko učenje](https://github.com/matf-ml/materijali-sa-vezbi-2025)
